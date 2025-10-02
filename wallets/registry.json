@@ -1,0 +1,38 @@
+[
+  {
+    "id": "wallet1",
+    "pubkey": "WALLET1_PUBLIC_KEY_HERE",
+    "path": "/secure/wallets/w1.json",
+    "riskPctPerTrade": 0.15
+  },
+  {
+    "id": "wallet2",
+    "pubkey": "WALLET2_PUBLIC_KEY_HERE",
+    "path": "/secure/wallets/w2.json",
+    "riskPctPerTrade": 0.15
+  },
+  {
+    "id": "wallet3",
+    "pubkey": "WALLET3_PUBLIC_KEY_HERE",
+    "path": "/secure/wallets/w3.json",
+    "riskPctPerTrade": 0.15
+  },
+  {
+    "id": "wallet4",
+    "pubkey": "WALLET4_PUBLIC_KEY_HERE",
+    "path": "/secure/wallets/w4.json",
+    "riskPctPerTrade": 0.15
+  },
+  {
+    "id": "wallet5",
+    "pubkey": "WALLET5_PUBLIC_KEY_HERE",
+    "path": "/secure/wallets/w5.json",
+    "riskPctPerTrade": 0.15
+  },
+  {
+    "id": "wallet6",
+    "pubkey": "WALLET6_PUBLIC_KEY_HERE",
+    "path": "/secure/wallets/w6.json",
+    "riskPctPerTrade": 0.15
+  }
+]

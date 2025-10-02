@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  sol-exec:
+    build: ./sol-exec
+    environment:
+      RPC_ENDPOINTS: ${RPC_ENDPOINTS}
+      WALLET_REGISTRY: ${WALLET_REGISTRY}
+    volumes:
+      - ./wallets:/secure/wallets:ro
+    networks:
+      - snatcher
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  orchestrator:
+    build: ./orchestrator
+    environment:
+      REDIS_URL: ${REDIS_URL}
+      PG_URL: ${PG_URL}
+      VAPID_PUBLIC: ${VAPID_PUBLIC}
+      VAPID_PRIVATE: ${VAPID_PRIVATE}
+      MIN_LIQUIDITY_USD: ${MIN_LIQUIDITY_USD}
+      DEV_SUPPLY_MAX_PCT: ${DEV_SUPPLY_MAX_PCT}
+      TP_PCT: ${TP_PCT}
+      SL_PCT: ${SL_PCT}
+      TRAILING_PCT: ${TRAILING_PCT}
+      SOL_EXEC_URL: http://sol-exec:8080
+    depends_on:
+      - redis
+      - postgres
+      - sol-exec
+    networks:
+      - snatcher
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  gui:
+    build: ./gui
+    environment:
+      REACT_APP_API_BASE: /api
+    depends_on:
+      - orchestrator
+    networks:
+      - snatcher
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./gui/build:/usr/share/nginx/html:ro
+      - ./infra/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - gui
+      - orchestrator
+    networks:
+      - snatcher
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - snatcher
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-snatcher}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-snatcherpass}
+      POSTGRES_DB: ${POSTGRES_DB:-snatcher}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - snatcher
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-snatcher}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis_data:
+  postgres_data:
+
+networks:
+  snatcher:
+    driver: bridge
